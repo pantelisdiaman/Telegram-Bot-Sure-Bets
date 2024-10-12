@@ -1,0 +1,108 @@
+var today = new Date();
+
+var day = today.getDate();
+var month = today.getMonth() + 1;
+
+
+// Arrays to store the data (later to be converted to a string)
+var sureBets = [];
+
+// Wait 20 seconds before pressing the button to ensure it is loaded
+setTimeout(() => {
+	
+	// Click on the 5% - 10% button
+	document.getElementsByClassName("sureBets_option__Ef2Bx")[3].click()
+
+}, 20000);
+
+// Wait 45 seconds before pressing the next button to ensure the previous data are saved
+setTimeout(() => {
+	
+	// Click on the 10%+ button
+	document.getElementsByClassName("sureBets_option__Ef2Bx")[4].click()
+
+}, 45000);
+
+// Scrape the data every 30 seconds
+setInterval(() => {
+    
+    // for each match
+    for (var i = 0; i < document.getElementsByClassName("gameBlock_match___M50M").length; i++)
+    {
+		// Get the date
+		var matchDay = parseInt(document.getElementsByClassName("gameBlock_dateTime__oXlKW")[i].children[1].innerText.split("/")[0]);
+		var matchMonth = parseInt(document.getElementsByClassName("gameBlock_dateTime__oXlKW")[i].children[1].innerText.split("/")[1]);
+		
+		// If the date is today, get the data
+		if ((matchDay == day || matchDay == day + 1) && matchMonth == month)
+		{
+			// League
+			var league = document.getElementsByClassName("gameBlock_blockTitle__4ABYx")[i].innerText;
+			// Match
+			var match = document.getElementsByClassName("gameBlock_match___M50M")[i].children[0].innerText;
+			// Market
+			var market = document.getElementsByClassName("gameBlock_gameBlock__guaHp")[i].getElementsByClassName("gameBlock_type__GMCan")[0].innerText;
+			// Time
+			var time = document.getElementsByClassName("gameBlock_dateTime__oXlKW")[i].children[0].innerText;
+			// Profit
+			var profit = document.getElementsByClassName("gameBlock_profit__Wy4p_")[i].innerText;
+			
+			// To keep the looped data
+			var allBets = [];
+			
+			// Sometimes there's an empty company, so keep this flag to avoid this error
+			var noCompany = false;
+			
+			// Loop to get all betting companies + odds
+			for (var j = 0; j < document.getElementsByClassName("gameBlock_gameBlock__guaHp")[i].getElementsByClassName("gameBlock_bookMakerCnt__hitKp").length; j++)
+			{
+				try 
+				{
+					// Betting company
+					var company = document.getElementsByClassName("gameBlock_gameBlock__guaHp")[i].getElementsByClassName("gameBlock_bookMakerCnt__hitKp")[j].children[0].children[0].alt;
+					// Bet type
+					var betType = document.getElementsByClassName("gameBlock_gameBlock__guaHp")[i].getElementsByClassName("gameBlock_outcomeCols_col__tjzAK")[j].innerText;
+					// Odd
+					var odd = document.getElementsByClassName("gameBlock_gameBlock__guaHp")[i].getElementsByClassName("gameBlock_odd__M3PNO")[j].innerText;
+					
+					allBets.push([company, betType, odd]);
+				}
+				catch(err) 
+				{
+				  noCompany = true;
+				}
+			}
+			
+			// If there was an empty company, don't add this match
+			if (!noCompany)
+			{
+				sureBets.push([league, match, market, time, profit, allBets]);
+			}
+		}
+    }
+	
+}, 30000);
+
+// Finally, wait another 5 seconds, put all data on a string and copy to cliboard
+setTimeout(() => {
+		
+	// Export
+	var outputStr = "";
+	
+	// Get all sure bets
+	for (var i = 0; i < sureBets.length; i++)
+	{
+		outputStr = outputStr + sureBets[i][0] + "|" +sureBets[i][1] + "|" + sureBets[i][2] + "|" + sureBets[i][3] + "|" + sureBets[i][4] + "|";
+		
+		for (var j = 0; j < sureBets[i][5].length; j++)
+		{
+			outputStr = outputStr + sureBets[i][5][j][0] + "|" + sureBets[i][5][j][1] + "|" + sureBets[i][5][j][2] + "|";
+		}
+		
+		outputStr = outputStr + "BREAK"
+	}
+	
+	// Copy the output to clipboard
+	navigator.clipboard.writeText(outputStr);
+	
+}, 70000)
